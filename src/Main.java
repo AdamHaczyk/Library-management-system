@@ -6,14 +6,14 @@ import java.util.Scanner;
 
 
 public class Main {
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) {
         int optionSelection;
 
         //Basic interface for user interaction. In future this will
         //be the first step of interacting with the whole program
         System.out.println ("""
-                    1 = manage books\n
-                    2 = manage user account\n
+                    1 = manage books
+                    2 = manage user account
                     3 = idk""");
 
         Scanner scanner = new Scanner(System.in);
@@ -22,7 +22,12 @@ public class Main {
         //Switch statement will be expanded later
         switch (optionSelection) {
             case 1:
-                bookManagement();
+                try {
+                    bookManagement();
+                } catch (SQLException ex) {
+                    System.err.println("SQLException occured: " + ex.getMessage());
+                    ex.printStackTrace();
+                }
                 break;
         }
 
@@ -58,17 +63,36 @@ public class Main {
         switch (optionSelection) {
             case 2:
                 Book browserObject = new Book();
+                try {
                 browserObject.browseBooks(connection);
+                } catch (SQLException ex) {
+                    System.err.println(ex.getMessage());
+                    ex.printStackTrace();
+                }
+                finally {
+                    browserObject = null;
+                }
 
-                System.out.print("Type id of the book you want to borrow: ");
+
+                System.out.print("Type the id of the book you want to borrow: ");
                 book_id = scanner.nextInt();
                 Book borrowBookObject = new Book(book_id);
-                borrowBookObject.checkOutBook(connection);
+                try {
+                    borrowBookObject.checkOutBook(connection);
+
+                } catch (SQLException ex) {
+                    System.err.println(ex.getMessage());
+                    ex.printStackTrace();
+                }
                 break;
 
             case 3:
                 Book book = new Book();
-                book.browseBooks(connection);
+                try {
+                    book.browseBooks(connection);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
                 break;
 
         }
@@ -148,10 +172,14 @@ class Book {
     public String getISBN() {return ISBN;}
 
 
-    public void browseBooks(Connection connection) {
+    //This method is used to display the book database.
+    //In the future it will get another String type argument, that will allow to
+    //search for particular kinds of books only (like available only).
+    public ResultSet browseBooks(Connection connection) throws SQLException {
 
-        try(Statement statement = connection.createStatement()) {
+            Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM books;");
+
             int book_id;
             String author;
             String title;
@@ -173,24 +201,31 @@ class Book {
                 System.out.println("Available: " + isAvailable);
 
             }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
 
+            resultSet.first();
+            return resultSet;
     }
+    //browseBooks method has been edited so that it's
+    //resultSet object can be passed on. This was done so that
+    //I can move the calling of this method to the one below thus
+    //(hopefully) decreasing the amount of exception handling blocks
+    //and making the code more clear.
     public void checkOutBook(Connection connection) throws SQLException {
 
         connection.setAutoCommit(false);
         try (Statement statement = connection.createStatement()) {
-            String query =
-                    "UPDATE books " +
-                            "SET is_available = FALSE " +
-                            "WHERE book_id = " + book_id;
+
+            String query ="""
+                    UPDATE books
+                    SET is_available = FALSE
+                    WHERE book_id = """
+                    + book_id + ";";
 
             statement.executeUpdate(query);
             connection.commit();
 
         } catch (SQLException ex) {
+            System.err.println(ex.getMessage());
             ex.printStackTrace();
         } finally {
             connection.setAutoCommit(true);
