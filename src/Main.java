@@ -4,7 +4,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Scanner;
 
-
 public class Main {
     public static void main(String[] args) {
         int optionSelection;
@@ -25,7 +24,7 @@ public class Main {
                 try {
                     bookManagement();
                 } catch (SQLException ex) {
-                    System.err.println("SQLException occured: " + ex.getMessage());
+                    System.err.println("SQLException occurred: " + ex.getMessage());
                     ex.printStackTrace();
                 }
                 break;
@@ -38,6 +37,7 @@ public class Main {
     public static void bookManagement() throws SQLException {
 
         int optionSelection;
+        boolean isCheckout;
 
         String url = "jdbc:mysql://localhost:3306/books";
         String username = "adam";
@@ -47,6 +47,8 @@ public class Main {
         String author;
         String title;
         String ISBN;
+        Book book = new Book();
+
 
         //Connection set up (object connection is passed on as an argument
         //methods of the Book class) and a basic interface to allow
@@ -61,24 +63,35 @@ public class Main {
 
         //Switch statement to be expanded with more options later
         switch (optionSelection) {
-            case 2:
-                Book browserObject = new Book();
+            case 1:
+                isCheckout = false;
+
+                book.browseBooks(connection);
+
+                System.out.print("Type the id of the book you want to return: ");
+                book_id = scanner.nextInt();
+                Book returnBook = new Book(book_id);
+
                 try {
-                browserObject.browseBooks(connection);
+                    returnBook.checkInCheckOutBook(connection, isCheckout);
+
                 } catch (SQLException ex) {
                     System.err.println(ex.getMessage());
                     ex.printStackTrace();
                 }
-                finally {
-                    browserObject = null;
-                }
+                break;
 
+            case 2:
+                isCheckout = true;
+
+                book.browseBooks(connection);
 
                 System.out.print("Type the id of the book you want to borrow: ");
                 book_id = scanner.nextInt();
-                Book borrowBookObject = new Book(book_id);
+                Book borrowBook = new Book(book_id);
+
                 try {
-                    borrowBookObject.checkOutBook(connection);
+                    borrowBook.checkInCheckOutBook(connection, isCheckout);
 
                 } catch (SQLException ex) {
                     System.err.println(ex.getMessage());
@@ -87,7 +100,6 @@ public class Main {
                 break;
 
             case 3:
-                Book book = new Book();
                 try {
                     book.browseBooks(connection);
                 } catch (SQLException ex) {
@@ -98,141 +110,4 @@ public class Main {
         }
 
     }
-}
-
-//LibraryManagementSystem has no functionality as of yet
-class LibraryManagementSystem {
-
-    public LibraryManagementSystem() {
-        String url = "jdbc:mysql://localhost:3306/books";
-        String username = "adam";
-        String password = "password";
-
-        try {
-            Connection connection = DriverManager.getConnection(url, username, password);
-            Statement statement = connection.createStatement();
-
-
-            String query = "SELECT * FROM books";
-            ResultSet resultSet = statement.executeQuery(query);
-
-            System.out.println("Available books:");
-
-            while (resultSet.next()) {
-                int book_id = resultSet.getInt("book_id");
-                String author = resultSet.getString("author");
-                String title = resultSet.getString("title");
-                String ISBN = resultSet.getString("ISBN");
-                System.out.println("id: " + book_id + " author: " + author + " title: " + title);
-            }
-
-
-        }   catch (SQLException e) {
-                System.out.println("Failed to connect to database");
-                e.printStackTrace();
-            }
-
-    }
-
-}
-
-class Book {
-    //Fields declarations
-    private int book_id;
-    private String title;
-    private String author;
-    private String ISBN;
-
-    //Constructors
-    public Book() {/*empty constructor*/}
-
-    public Book(int book_id) {
-        this.book_id = book_id;
-    }
-    public Book(String authorOrTitle) {
-        this.author = authorOrTitle;
-        this.title = authorOrTitle;
-    }
-
-    public Book(String author, String title) {
-        this.author = author;
-        this.title = title;
-    }
-    public Book(int book_id, String title, String author, String ISBN) {
-        this.book_id = book_id;
-        this.title = title;
-        this.author = author;
-        this.ISBN = ISBN;
-    }
-
-    //Getter methods
-    public int getBook_id() {return book_id;}
-    public String getTitle() {return title;}
-    public String getAuthor() {return author;}
-    public String getISBN() {return ISBN;}
-
-
-    //This method is used to display the book database.
-    //In the future it will get another String type argument, that will allow to
-    //search for particular kinds of books only (like available only).
-    public ResultSet browseBooks(Connection connection) throws SQLException {
-
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM books;");
-
-            int book_id;
-            String author;
-            String title;
-            String ISBN;
-            boolean isAvailable;
-
-            System.out.println("Book database:");
-            while (resultSet.next()) {
-                book_id = resultSet.getInt("book_id");
-                author = resultSet.getString("author");
-                title = resultSet.getString("title");
-                ISBN = resultSet.getString("ISBN");
-                isAvailable = resultSet.getBoolean("is_available");
-
-                System.out.print("book id: " + book_id + "  ||  ");
-                System.out.print("author: " + author + "  ||  ");
-                System.out.print("title: " + title + "  ||  ");
-                System.out.print("ISBN: " + ISBN + "  ||  ");
-                System.out.println("Available: " + isAvailable);
-
-            }
-
-            resultSet.first();
-            return resultSet;
-    }
-    //browseBooks method has been edited so that it's
-    //resultSet object can be passed on. This was done so that
-    //I can move the calling of this method to the one below thus
-    //(hopefully) decreasing the amount of exception handling blocks
-    //and making the code more clear.
-    public void checkOutBook(Connection connection) throws SQLException {
-
-        connection.setAutoCommit(false);
-        try (Statement statement = connection.createStatement()) {
-
-            String query ="""
-                    UPDATE books
-                    SET is_available = FALSE
-                    WHERE book_id = """
-                    + book_id + ";";
-
-            statement.executeUpdate(query);
-            connection.commit();
-
-        } catch (SQLException ex) {
-            System.err.println(ex.getMessage());
-            ex.printStackTrace();
-        } finally {
-            connection.setAutoCommit(true);
-        }
-    }
-}
-
-class User {
-
 }
