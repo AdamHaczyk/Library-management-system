@@ -58,7 +58,8 @@ class Library {
                 1 = Check in
                 2 = Check out
                 3 = Browse
-                4 = Add a book""");
+                4 = Add a book
+                9 = TESTING""");
         Scanner scanner = new Scanner(System.in);
         optionSelection = scanner.nextInt();
         inputCleaner = scanner.nextLine();      //Consume the '\n' that was left by nextInt() right above.
@@ -113,8 +114,10 @@ class Library {
                 System.out.println("Insert book details");
                 System.out.print("Author: ");
                 author = scanner.nextLine();
+                author = author.toUpperCase();
                 System.out.print("Title: ");
                 title = scanner.nextLine();
+                title = title.toUpperCase();
                 System.out.print("ISBN: ");
                 ISBN = scanner.nextLine();
                 try {
@@ -124,6 +127,11 @@ class Library {
                     System.err.println(ex.getMessage());
                     ex.printStackTrace();
                 }
+                break;
+
+            case 9: //FOR TESTING
+                getEmptyID(connection);
+                break;
 
         }
 
@@ -203,6 +211,8 @@ class Library {
 
     public void addBook(Connection connection, Book book) throws SQLException {
         connection.setAutoCommit(false);
+        int localBookID = getEmptyID(connection);
+
         String addQuery = """
                 INSERT INTO books
                 (author, title, ISBN, is_available)
@@ -212,9 +222,22 @@ class Library {
                 book.getISBN() + "\", " +
                 "true);";
 
+        String addWithIDQuery = """
+                INSERT INTO books
+                (book_id, author, title, ISBN, is_available)
+                VALUES (\"""" +
+                localBookID + "\", \"" +
+                book.getAuthor() + "\", \"" +
+                book.getTitle() + "\", \"" +
+                book.getISBN() + "\", " +
+                "true);";
+
         try {
             Statement statement = connection.createStatement();
-            statement.executeUpdate(addQuery);
+
+            if(localBookID != 0) statement.executeUpdate(addWithIDQuery);
+            else statement.executeUpdate(addQuery);
+
         } catch (SQLException ex) {
             connection.rollback();
             System.err.println(ex.getMessage());
@@ -222,6 +245,96 @@ class Library {
         } finally {
             connection.setAutoCommit(true);
         }
+    }
+
+    //This method removes a book selected by the user. It also changes
+    //the auto_increment value in books table if the position
+    //with the highest book_id was removed and stores the id of removed
+    //position to separate table free_ids, which will allow to use those
+    //ids in the future.
+    public void removeBook(Connection connection, Book book) throws SQLException {
+        connection.setAutoCommit(false);
+
+        String removeQuery = """
+                DELETE FROM books
+                WHERE book_id = """ + book.getBook_id();
+
+        String auto_incrementQuery = """
+            ALTER TABLE books
+            AUTO INCREMENT = """ + book.getBook_id();
+
+        String getAuto_IncrementQuery = """
+                SELECT `AUTO_INCREMENT`
+                FROM  INFORMATION_SCHEMA.TABLES
+                WHERE TABLE_SCHEMA = 'books'
+                AND   TABLE_NAME   = 'books';""";
+
+
+        try {
+            Statement statement = connection.createStatement();
+
+            statement.executeUpdate(removeQuery);
+            storeUnusedId(connection, book.getBook_id());
+
+            ResultSet resultSet = statement.executeQuery(getAuto_IncrementQuery);
+            resultSet.next();
+
+            if(resultSet.getInt("AUTO_INCREMENT") == (book.getBook_id() + 1)) {
+                statement.executeUpdate(auto_incrementQuery);
+            }
+
+        } catch (SQLException ex) {
+            System.err.println(ex.getMessage());
+            ex.printStackTrace();
+        }
+
+    }
+
+    public void storeUnusedId(Connection connection, int idToStore) throws SQLException {
+        connection.setAutoCommit(false);
+        String localQuery = """
+                INSERT INTO free_ids
+                VALUES (""" + idToStore + ");";
+
+        try {
+            Statement statement = connection.createStatement();
+            statement.executeUpdate(localQuery);
+        } catch (SQLException ex) {
+            System.err.println(ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            connection.setAutoCommit(true);
+        }
+    }
+
+    //This method gets the first (FIFO) free id from table free_ids,
+    //returns its value and removes it from the table.
+    public int getEmptyID(Connection connection) throws SQLException{
+        int localBookID;
+        String deleteQuery;
+
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM free_ids;");
+
+            if (!resultSet.next()) return 0;
+            localBookID = resultSet.getInt("free_id");
+
+            deleteQuery = """
+                    DELETE FROM free_ids
+                    WHERE free_id = """ + localBookID;
+
+
+            connection.setAutoCommit(false);
+            try {
+                statement.executeUpdate(deleteQuery);
+            } catch (SQLException ex) {
+                System.err.println(ex.getMessage());
+                ex.printStackTrace();
+            } finally {
+                connection.setAutoCommit(true);
+            }
+            return localBookID;
+
     }
 
 }
