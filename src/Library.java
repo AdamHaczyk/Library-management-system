@@ -16,7 +16,7 @@ class Library {
         Scanner scanner = new Scanner(System.in);
         optionSelection = scanner.nextInt();
 
-        //Switch statement will be expanded later
+        //Switch statement will be expanded later. Or removed.
         switch (optionSelection) {
             case 1:
                 try {
@@ -46,8 +46,7 @@ class Library {
         String author;
         String title;
         String ISBN;
-        String inputCleaner;
-        Book book = new Book();
+        String inputCleaner;        //Used to consume the '\n' that gets left over by scanner.nextInt() method.
 
 
         //Connection set up (object connection is passed on as an argument
@@ -59,10 +58,11 @@ class Library {
                 2 = Check out
                 3 = Browse
                 4 = Add a book
+                5 = Delete a book
                 9 = TESTING""");
         Scanner scanner = new Scanner(System.in);
         optionSelection = scanner.nextInt();
-        inputCleaner = scanner.nextLine();      //Consume the '\n' that was left by nextInt() right above.
+        inputCleaner = scanner.nextLine();
 
         //Switch statement to be expanded with more options later
         switch (optionSelection) {
@@ -129,8 +129,25 @@ class Library {
                 }
                 break;
 
+            case 5:
+                try {
+                    browseBooks(connection);
+                    System.out.println("Select the ID of a book you wish to delete from the database");
+                    book_id = scanner.nextInt();
+                    inputCleaner = scanner.nextLine();
+                    Book bookToRemove = new Book(book_id);
+                    removeBook(connection, bookToRemove);
+
+                } catch (SQLException ex) {
+                    System.err.println(ex.getMessage());
+                    ex.printStackTrace();
+                } finally {
+                    System.out.println("Book removed successfully");
+                }
+                break;
+
             case 9: //FOR TESTING
-                getEmptyID(connection);
+                storeUnusedId(connection, 4);
                 break;
 
         }
@@ -179,13 +196,13 @@ class Library {
         String checkOutQuery ="""
                     UPDATE books
                     SET is_available = FALSE
-                    WHERE book_id = """
+                    WHERE book_id ="""
                 + book.getBook_id() + ";";
 
         String checkInQuery ="""
                     UPDATE books
                     SET is_available = TRUE
-                    WHERE book_id = """
+                    WHERE book_id ="""
                 + book.getBook_id() + ";";
 
         try (Statement statement = connection.createStatement()) {
@@ -261,26 +278,30 @@ class Library {
 
         String auto_incrementQuery = """
             ALTER TABLE books
-            AUTO INCREMENT = """ + book.getBook_id();
+            AUTO_INCREMENT = """ + book.getBook_id();
 
         String getAuto_IncrementQuery = """
                 SELECT `AUTO_INCREMENT`
-                FROM  INFORMATION_SCHEMA.TABLES
+                FROM INFORMATION_SCHEMA.TABLES
                 WHERE TABLE_SCHEMA = 'books'
-                AND   TABLE_NAME   = 'books';""";
+                AND TABLE_NAME = 'books';""";
 
 
         try {
             Statement statement = connection.createStatement();
+            int localBookID = book.getBook_id();
+            storeUnusedId(connection, localBookID);
 
             statement.executeUpdate(removeQuery);
-            storeUnusedId(connection, book.getBook_id());
 
             ResultSet resultSet = statement.executeQuery(getAuto_IncrementQuery);
             resultSet.next();
+            System.out.println("AUTO_INCREMENT = " + resultSet.getInt("AUTO_INCREMENT"));
 
-            if(resultSet.getInt("AUTO_INCREMENT") == (book.getBook_id() + 1)) {
+
+            if(resultSet.getInt("AUTO_INCREMENT") == (localBookID + 1)) {
                 statement.executeUpdate(auto_incrementQuery);
+                System.out.println("this works right here");
             }
 
         } catch (SQLException ex) {
@@ -291,6 +312,7 @@ class Library {
     }
 
     public void storeUnusedId(Connection connection, int idToStore) throws SQLException {
+        System.out.println("idToStore = " + idToStore);
         connection.setAutoCommit(false);
         String localQuery = """
                 INSERT INTO free_ids
