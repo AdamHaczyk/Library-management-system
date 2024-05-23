@@ -16,30 +16,29 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `books`
+-- Table structure for table `user_books`
 --
 
-DROP TABLE IF EXISTS `books`;
+DROP TABLE IF EXISTS `user_books`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `books` (
-  `book_id` int NOT NULL AUTO_INCREMENT,
-  `author` varchar(150) DEFAULT NULL,
-  `title` varchar(150) DEFAULT NULL,
-  `ISBN` varchar(50) DEFAULT NULL,
-  `is_available` tinyint(1) DEFAULT NULL,
-  PRIMARY KEY (`book_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `user_books` (
+  `user_id` int NOT NULL,
+  `book_id` int NOT NULL,
+  PRIMARY KEY (`user_id`,`book_id`),
+  KEY `book_id` (`book_id`),
+  CONSTRAINT `user_books_ibfk_2` FOREIGN KEY (`book_id`) REFERENCES `books` (`book_id`),
+  CONSTRAINT `user_books_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `books`
+-- Dumping data for table `user_books`
 --
 
-LOCK TABLES `books` WRITE;
-/*!40000 ALTER TABLE `books` DISABLE KEYS */;
-INSERT INTO `books` VALUES (1,'STANISŁAW LEM','SOLARIS','123',0),(2,'PHILIP K. DICK','UBIK','1234',1),(3,'MILAN KUNDERA','NIEZNOSNA LEKKOSC BYTU','123123',0),(4,'ASTRID LINDGREN','DZIECI Z BULLERBYN','18',1),(5,'ALBERT CAMUS','PIERWSZY CZLOWIEK','2',1),(6,'STANISLAW LEM','SOLARIS','2137',1);
-/*!40000 ALTER TABLE `books` ENABLE KEYS */;
+LOCK TABLES `user_books` WRITE;
+/*!40000 ALTER TABLE `user_books` DISABLE KEYS */;
+/*!40000 ALTER TABLE `user_books` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
