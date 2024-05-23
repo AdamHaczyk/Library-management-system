@@ -16,24 +16,29 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `free_ids`
+-- Table structure for table `user_books`
 --
 
-DROP TABLE IF EXISTS `free_ids`;
+DROP TABLE IF EXISTS `user_books`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `free_ids` (
-  `free_id` int DEFAULT NULL
+CREATE TABLE `user_books` (
+  `user_id` int NOT NULL,
+  `book_id` int NOT NULL,
+  PRIMARY KEY (`user_id`,`book_id`),
+  KEY `book_id` (`book_id`),
+  CONSTRAINT `user_books_ibfk_2` FOREIGN KEY (`book_id`) REFERENCES `books` (`book_id`),
+  CONSTRAINT `user_books_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `free_ids`
+-- Dumping data for table `user_books`
 --
 
-LOCK TABLES `free_ids` WRITE;
-/*!40000 ALTER TABLE `free_ids` DISABLE KEYS */;
-/*!40000 ALTER TABLE `free_ids` ENABLE KEYS */;
+LOCK TABLES `user_books` WRITE;
+/*!40000 ALTER TABLE `user_books` DISABLE KEYS */;
+/*!40000 ALTER TABLE `user_books` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

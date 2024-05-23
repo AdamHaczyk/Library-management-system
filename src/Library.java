@@ -147,9 +147,37 @@ class Library {
                 break;
 
             case 9: //FOR TESTING
-                storeUnusedId(connection, 4);
+                System.out.println("Nothing to test here for now");
                 break;
 
+        }
+
+    }
+
+    //This method handles the communication between User and Library classes
+    public void userManagement() throws SQLException {
+        String url = "jdbc:mysql://localhost:3306/books";
+        String username = "adam";
+        String password = "password";
+        int optionSelection;
+
+        int user_id;
+        String first_name, last_name;
+        Timestamp user_since;
+        String inputCleaner;        //Used to consume the '\n' that gets left over by scanner.nextInt() method.
+
+        Connection connection = DriverManager.getConnection(url, username, password);
+
+        System.out.println("9 = TESTING");
+
+        Scanner scanner = new Scanner(System.in);
+        optionSelection = scanner.nextInt();
+        inputCleaner = scanner.nextLine();
+        switch (optionSelection) {
+            case 9:
+                User testObj1 = new User(1);
+                User testObj2= new User("Mansa", "Musa");
+            break;
         }
 
     }
@@ -329,8 +357,8 @@ class Library {
         }
     }
 
-    //This method gets the first (FIFO) free id from table free_ids,
-    //returns its value and removes it from the table.
+    //This method gets the first (numerically) free id from table free_ids,
+    //removes it from the table and returns its value.
     public int getEmptyID(Connection connection) throws SQLException{
         int localBookID;
         String deleteQuery;

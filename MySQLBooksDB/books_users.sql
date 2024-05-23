@@ -16,24 +16,29 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `free_ids`
+-- Table structure for table `users`
 --
 
-DROP TABLE IF EXISTS `free_ids`;
+DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `free_ids` (
-  `free_id` int DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `users` (
+  `user_id` int NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(50) NOT NULL,
+  `last_name` varchar(50) NOT NULL,
+  `user_since` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `free_ids`
+-- Dumping data for table `users`
 --
 
-LOCK TABLES `free_ids` WRITE;
-/*!40000 ALTER TABLE `free_ids` DISABLE KEYS */;
-/*!40000 ALTER TABLE `free_ids` ENABLE KEYS */;
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'RANDALL','THYMES','2024-05-14 09:33:42'),(2,'COUNT','DRACULA','2024-05-14 09:39:38'),(3,'MICHAEL','PHELPS','2024-05-14 09:33:42'),(4,'MANSA','MUSA','2024-05-14 09:33:42');
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
